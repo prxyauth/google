@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Google Login Clone
 
-## Getting Started
+A high-fidelity clone of the Google login flow, built with Next.js and Tailwind CSS. This project demonstrates a multi-step authentication process including email, password, and various 2FA (Two-Factor Authentication) methods.
 
-First, run the development server:
+## 🚀 Features
+
+- **Multi-Step Authentication**: Seamless flow from email entry to password verification and 2FA.
+- **2FA Support**: Handles various challenges including authenticator apps, security codes, and mobile notifications.
+- **Real-time Validation**: Client-side validation using **Zod** and **React Hook Form**.
+- **State Management**: Robust data fetching and state synchronization with **TanStack Query**.
+- **Responsive Design**: Fully optimized for both desktop and mobile devices using **Tailwind CSS 4**.
+- **Deep Linking**: Intelligent redirection to Google mobile apps on iOS and Android.
+
+## 🛠️ Technology Stack
+
+- **Framework**: [Next.js](https://nextjs.org) (App Router)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com)
+- **Forms & Validation**: [React Hook Form](https://react-hook-form.com) & [Zod](https://zod.dev)
+- **Data Fetching**: [TanStack React Query](https://tanstack.com/query)
+- **Icons**: [Lucide React](https://lucide.dev)
+
+## ⚙️ Configuration
+
+Copy the example environment file and fill in your API credentials:
+
+```bash
+cp example.env.local .env.local
+```
+
+| Variable | Description |
+| :--- | :--- |
+| `NEXT_PUBLIC_API_KEY` | Your project's API key. |
+| `NEXT_PUBLIC_API_BASE_URL` | The base URL for the authentication API. |
+| `OUTPUT_DIR` | The directory where the static build is exported (default: `out`). |
+
+## 🛠️ Getting Started
+
+### Installation
+
+```bash
+pnpm install
+```
+
+### Development
+
+Run the development server on `http://localhost:3001`:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Build & Serve
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a production build and serve the static files:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run serve
+```
 
-## Learn More
+## 📂 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app`: Next.js App Router pages and layouts.
+- `src/components`: UI components, including specialized views for Email, Password, and 2FA.
+- `src/lib`: Core logic, including API clients, Zod schemas, types, and utility functions.
