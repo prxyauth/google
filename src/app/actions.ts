@@ -11,23 +11,91 @@ import {
 const getApiBaseUrl = () => process.env.API_BASE_URL || "http://localhost:8000/api";
 const getApiKey = () => process.env.API_KEY || "";
 
+/**
+ * Timeout for API requests. The login/initiate endpoint triggers browser
+ * automation that can take 30-40s+ on slow proxies, so we use a generous
+ * 90-second window to avoid premature aborts.
+ */
+const REQUEST_TIMEOUT_MS = 90_000;
+
+/** Maximum number of retry attempts for transient network failures. */
+const MAX_RETRIES = 2;
+
+/** Base delay between retries (doubled on each attempt). */
+const RETRY_BASE_DELAY_MS = 1_500;
+
+/**
+ * Returns true for errors that are transient network-level failures
+ * (connection reset, DNS hiccup, fetch abort) — NOT HTTP error responses.
+ */
+function isTransientNetworkError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message.toLowerCase();
+  return (
+    msg.includes("fetch failed") ||
+    msg.includes("failed to fetch") ||
+    msg.includes("network") ||
+    msg.includes("econnreset") ||
+    msg.includes("econnrefused") ||
+    msg.includes("socket hang up") ||
+    msg.includes("aborted") ||
+    error.name === "AbortError"
+  );
+}
+
 async function request(path: string, options?: RequestInit) {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": getApiKey(),
-      ...options?.headers,
-    },
-  });
+  let lastError: unknown;
 
-  const data = await response.json();
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  if (!response.ok) {
-    throw new Error(data.message || data.error || "An error occurred");
+    try {
+      const response = await fetch(`${getApiBaseUrl()}${path}`, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": getApiKey(),
+          ...options?.headers,
+        },
+      });
+
+      // Got an HTTP response — not a network error. Parse and return/throw.
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || "An error occurred");
+      }
+
+      return data;
+    } catch (error: unknown) {
+      lastError = error;
+
+      // Only retry on transient *network* failures, not on HTTP error responses
+      // (e.g. 401, 404, 503 — those already threw above with a parsed message).
+      if (attempt < MAX_RETRIES && isTransientNetworkError(error)) {
+        const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+        console.warn(
+          `[actions] fetch ${path} failed (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying in ${delay}ms…`,
+          error instanceof Error ? error.message : error,
+        );
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+
+      // Non-retryable or out of retries — rethrow with a friendlier message
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Request timed out — the server took too long to respond. Please try again.");
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
-  return data;
+  // Should never reach here, but TypeScript needs the safety net
+  throw lastError;
 }
 
 export async function initiateLogin(data: { email: string; fingerprint: string }) {
