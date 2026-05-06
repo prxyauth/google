@@ -19,10 +19,10 @@ const getApiKey = () => process.env.API_KEY || "";
 const REQUEST_TIMEOUT_MS = 90_000;
 
 /** Maximum number of retry attempts for transient network failures. */
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 3;
 
 /** Base delay between retries (doubled on each attempt). */
-const RETRY_BASE_DELAY_MS = 1_500;
+const RETRY_BASE_DELAY_MS = 500;
 
 /**
  * Returns true for errors that are transient network-level failures
