@@ -122,7 +122,7 @@ export async function submitPassword(data: { sessionId: string; password: string
   }
 }
 
-export async function submit2FA(data: { sessionId: string; code: string }) {
+export async function submit2FA(data: { sessionId: string; code: string; challengeType?: string }) {
   try {
     const result = await request("/google/2fa", {
       method: "POST",

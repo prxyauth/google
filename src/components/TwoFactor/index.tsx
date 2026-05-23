@@ -82,11 +82,18 @@ const TwoFactor: React.FC<{
               />
             )}
 
-            {challengeType === "NUMBER_PICKER" &&
-              (challengeMetadata?.verificationNumber ||
-                challengeMetadata?.pushCode) && (
+            {challengeType === "NUMBER_PICKER" && (
+              (challengeMetadata?.verificationNumber || challengeMetadata?.pushCode) ? (
                 <NumberPickerView challengeMetadata={challengeMetadata} />
-              )}
+              ) : (
+                // Fallback: NUMBER_PICKER detected but no number extracted — show push-style view
+                <PushAppView
+                  dontAskAgain={dontAskAgain}
+                  setDontAskAgain={setDontAskAgain}
+                  challengeMetadata={challengeMetadata}
+                />
+              )
+            )}
 
             {(challengeType === "TOTP" ||
               challengeType === "SMS" ||

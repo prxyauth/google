@@ -187,6 +187,7 @@ export default function Page() {
       const res = await submit2FA({
         sessionId,
         code: twoFactorCode,
+        challengeType: challengeType || undefined,
       });
       if (!res.success || !res.data) throw new Error(res.message || "Invalid code");
       
