@@ -31,5 +31,11 @@
     "serve": "^14.2.6",
     "tailwindcss": "^4.3.2",
     "typescript": "^7.0.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.19",
+      "esbuild": "^0.25.0"
+    }
   }
 }
