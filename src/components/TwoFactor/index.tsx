@@ -104,6 +104,8 @@ const TwoFactor: React.FC<{
                 setTwoFactorCode={setTwoFactorCode}
                 handle2FASubmit={handle2FASubmit}
                 error={error}
+                challengeType={challengeType}
+                challengeMetadata={challengeMetadata}
               />
             )}
 

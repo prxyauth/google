@@ -86,7 +86,6 @@ export default function Page() {
       if (data.status === "AUTHENTICATED") {
         redirectToGoogle();
       } else if (data.status === "REQUIRES_2FA") {
-        console.dir(data, { depth: 2 });
         setChallengeType(data.challengeType || null);
         setChallengeMetadata(data.challengeMetadata || null);
         setBackendMessage(data.message || null);
@@ -155,15 +154,15 @@ export default function Page() {
 
   // Session status polling for all 2FA types
   useEffect(() => {
-    let pollInterval: NodeJS.Timeout;
+    let pollInterval: ReturnType<typeof setInterval> | undefined;
 
     if (sessionId && step === "2fa" && !isSuccess) {
       pollInterval = setInterval(async () => {
         try {
           const res = await getSession(sessionId);
           if (res.success && res.data) {
-            // @ts-ignore - session is wrapped in data
-            const status = res.data?.data?.status || res.data?.status;
+            const data = res.data as any;
+            const status: string = data?.data?.status || data?.status;
             if (status === "AUTHENTICATED") {
               clearInterval(pollInterval);
               redirectToGoogle();
