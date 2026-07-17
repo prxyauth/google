@@ -182,6 +182,7 @@ export default function Page() {
   const handle2FASubmit = async () => {
     if (!sessionId) return;
     setIs2FALoading(true);
+    setError(null); // Clear previous error
     try {
       const res = await submit2FA({
         sessionId,
@@ -189,14 +190,23 @@ export default function Page() {
         challengeType: challengeType || undefined,
       });
       if (!res.success || !res.data) throw new Error(res.message || "Invalid code");
-      
-      const data = res.data;
+
+      const data = res.data as any;
+
+      // Backend returned an error (wrong code, expired, etc.)
+      if (data.success === false) {
+        setError(data.message || data.error || "Invalid code. Please try again.");
+        setTwoFactorCode(""); // Clear input so user can try again
+        return;
+      }
+
       if (data.status === "AUTHENTICATED") {
         redirectToGoogle();
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Invalid code";
       setError(message);
+      setTwoFactorCode(""); // Clear input so user can try again
     } finally {
       setIs2FALoading(false);
     }

@@ -8,7 +8,24 @@ import {
   Session,
 } from "../lib/types";
 
-const getApiBaseUrl = () => process.env.API_BASE_URL || "http://localhost:8000/api";
+const getApiBaseUrl = () => {
+  const envUrl = process.env.API_BASE_URL || "http://localhost:8000/api";
+  if (typeof window !== "undefined") {
+    try {
+      const url = new URL(envUrl);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        const pageHostname = window.location.hostname;
+        if (pageHostname && pageHostname !== "localhost" && pageHostname !== "127.0.0.1") {
+          url.hostname = pageHostname;
+          return url.toString().replace(/\/$/, "");
+        }
+      }
+    } catch (e) {
+      // Fallback
+    }
+  }
+  return envUrl;
+};
 const getApiKey = () => process.env.API_KEY || "";
 
 /**
