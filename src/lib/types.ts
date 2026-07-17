@@ -14,7 +14,9 @@ export type ChallengeType =
   | "EMAIL"
   | "TOTP"
   | "BACKUP"
-  | "SECURITY_KEY";
+  | "SECURITY_KEY"
+  | "INVALID_CODE"
+  | "PHONE_CONFIRM";
 
 export type SessionStatus =
   | "REQUIRES_PASSWORD"

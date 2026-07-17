@@ -98,7 +98,8 @@ const TwoFactor: React.FC<{
             {(challengeType === "TOTP" ||
               challengeType === "SMS" ||
               challengeType === "VOICE" ||
-              challengeType === "BACKUP") && (
+              challengeType === "BACKUP" ||
+              challengeType === "PHONE_CONFIRM") && (
               <TOTPView
                 twoFactorCode={twoFactorCode}
                 setTwoFactorCode={setTwoFactorCode}
@@ -184,7 +185,8 @@ const TwoFactor: React.FC<{
             challengeType === "SMS" ||
             challengeType === "VOICE" ||
             challengeType === "EMAIL" ||
-            challengeType === "BACKUP") && (
+            challengeType === "BACKUP" ||
+            challengeType === "PHONE_CONFIRM") && (
             <Button
               onClick={handle2FASubmit}
               disabled={isLoading || !twoFactorCode}

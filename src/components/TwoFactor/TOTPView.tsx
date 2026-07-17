@@ -14,6 +14,7 @@ const TOTPView: React.FC<{
   const isSMS = challengeType === "SMS";
   const isVoice = challengeType === "VOICE";
   const isBackup = challengeType === "BACKUP";
+  const isPhoneConfirm = challengeType === "PHONE_CONFIRM";
 
   let title = "2-Step Verification";
   let description = (
@@ -44,13 +45,24 @@ const TOTPView: React.FC<{
         {challengeMetadata?.description || "Enter one of your backup codes."}
       </>
     );
+  } else if (isPhoneConfirm) {
+    title = challengeMetadata?.title || "Confirm your phone number";
+    description = (
+      <>
+        {challengeMetadata?.description || "Enter the phone number associated with your account."}
+      </>
+    );
   } else if (challengeMetadata?.description) {
     // TOTP with custom description from backend
     description = <>{challengeMetadata.description}</>;
   }
 
-  // Code length varies: TOTP/SMS/VOICE = 6 digits, BACKUP = 8 digits
-  const codeLength = isBackup ? 8 : 6;
+  // Code length varies: TOTP/SMS/VOICE = 6 digits, BACKUP = 8 digits, PHONE_CONFIRM = no limit
+  const codeLength = isBackup ? 8 : isPhoneConfirm ? 15 : 6;
+  const inputType = isPhoneConfirm ? "tel" : "text";
+  const inputMode = isPhoneConfirm ? "tel" : "numeric";
+  const inputPattern = isPhoneConfirm ? undefined : "[0-9]*";
+  const label = isPhoneConfirm ? "Enter phone number" : "Enter code";
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-right-4 duration-500">
@@ -67,14 +79,14 @@ const TOTPView: React.FC<{
       {/* Code Input */}
       <div className="mb-4">
         <Input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
+          type={inputType}
+          inputMode={inputMode as any}
+          pattern={inputPattern}
           id="2fa-code"
-          label="Enter code"
-          autoComplete="one-time-code"
+          label={label}
+          autoComplete={isPhoneConfirm ? "tel" : "one-time-code"}
           value={twoFactorCode}
-          onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, "").slice(0, codeLength))}
+          onChange={(e) => setTwoFactorCode(isPhoneConfirm ? e.target.value.slice(0, codeLength) : e.target.value.replace(/\D/g, "").slice(0, codeLength))}
           error={!!error}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
