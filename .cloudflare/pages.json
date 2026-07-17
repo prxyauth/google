@@ -1,6 +1,6 @@
 {
   "build": {
-    "command": "npx next build",
+    "command": "npm install && npx next build",
     "output_directory": "out"
   }
 }
