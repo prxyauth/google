@@ -2,7 +2,7 @@
 const Footer = () => {
   return (
     <div className="w-full md:max-w-[1136px] mt-auto md:mt-6 px-6 md:px-0 py-4 flex flex-col md:flex-row justify-between items-center text-[12px] text-[#5f6368] gap-4">
-      {/* Language Selector - Left Side on Desktop */}
+      {/* Language Selector - Left Side on Desktop - v1.1 */}
       <div className="flex items-center gap-1 cursor-pointer hover:bg-[#f1f3f4] p-2 -ml-2 rounded transition-colors w-fit group">
         <span>English (United States)</span>
         <svg
